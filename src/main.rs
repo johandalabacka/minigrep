@@ -18,21 +18,34 @@ fn grep(pattern: &str, file_path: &str) -> Result<(), std::io::Error> {
     Ok(())
 }
 
+#[derive(Debug)]
+struct Config {
+    pattern: String,
+    file_path: String,
+}
+
+impl Config {
+    fn build(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("Too few arguments");
+        }
+        Ok(Config {
+            pattern: args[1].clone(),
+            file_path: args[2].clone(),
+        })
+    }
+}
+
 fn main() {
     let args: Vec<String> = args().collect();
-    if args.len() != 3 {
-        eprint!("Usage: minigrep <pattern> <file>");
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        eprintln!("Error: {}", err);
         exit(1);
-    }
-    let pattern = &args[1];
-    let file_path = &args[2];
+    });
 
-    println!("minigrep {} {}", pattern, file_path);
-    match grep(&pattern, &file_path) {
-        Ok(_) => (),
-        Err(error) => {
-            eprint!("Error: {}", error);
-            exit(1);
-        }
-    }
+    println!("minigrep {:?}", config);
+    grep(&config.pattern, &config.file_path).unwrap_or_else(|err| {
+        eprint!("Error: {}", err);
+        exit(1);
+    })
 }
